@@ -1,5 +1,7 @@
 import fetch from "node-fetch";
 import cheerio from "cheerio";
+import { Connection } from "mysql2/promise";
+import Database from "./Database";
 
 const getTitle = ($: cheerio.Root) => {
   const headerRow = $("tr").filter((_, element) => {
@@ -17,12 +19,24 @@ const getMediaWithFeature = ($: cheerio.Root) => {
   }).get();
 }
 
-const run = async () => {
-  const response = await fetch("http://dbtropes.org/resource/Main/ActionGenre");
+const load = async (url: string): Promise<cheerio.Root> => {
+  const response = await fetch(url);
   const content = await response.text();
-  const $ = cheerio.load(content);
+  return cheerio.load(content);
+}
 
-  return getMediaWithFeature($);
+const run = async () => {
+  const connection = await Database.getPool({
+    host: "localhost",
+    port: 3306,
+    database: "tvtropes",
+    user: "root",
+    password: "example"
+  });
+
+  const [rows] = await connection.query("select true");
+  await Database.closePool();
+  return rows;
 }
 
 run().then(console.log).catch(console.error);
