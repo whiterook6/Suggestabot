@@ -59,7 +59,7 @@ CREATE TABLE `media_urls` (
 CREATE TABLE `tropes` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(128) COLLATE utf8mb4_general_ci NOT NULL,
-  `url` text COLLATE utf8mb4_general_ci,
+  `url` text COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

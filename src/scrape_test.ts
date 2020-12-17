@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import cheerio from "cheerio";
-import { Connection } from "mysql2/promise";
+import { Connection, OkPacket } from "mysql2/promise";
 import Database from "./Database";
 
 const getTitle = ($: cheerio.Root) => {
@@ -10,7 +10,7 @@ const getTitle = ($: cheerio.Root) => {
   return headerRow.find("td > a").first().text().trim();
 }
 
-const getMediaWithFeature = ($: cheerio.Root) => {
+const getMediaWithFeature = ($: cheerio.Root): string[] => {
   const rows = $("tr").filter((_, element) => {
     return $(element).text().includes("hasFeature");
   });
@@ -25,8 +25,14 @@ const load = async (url: string): Promise<cheerio.Root> => {
   return cheerio.load(content);
 }
 
+const insertMedia = async (media: string[], connection: Connection) => {
+  const sql = "INSERT INTO `media` (`name`) VALUES ?";
+  const [results] = await connection.query(sql, [media.map(m => [m])]);
+  return results;
+}
+
 const run = async () => {
-  const connection = await Database.getPool({
+  const connection = await Database.getConnection({
     host: "localhost",
     port: 3306,
     database: "tvtropes",
@@ -34,9 +40,13 @@ const run = async () => {
     password: "example"
   });
 
-  const [rows] = await connection.query("select true");
+  const $ = await load("http://dbtropes.org/resource/Main/ActionGenre");
+  const media = getMediaWithFeature($);
+  console.log(media);
+  const results = await insertMedia(media, connection);
   await Database.closePool();
-  return rows;
+  const {affectedRows} = results as OkPacket;
+  return affectedRows;
 }
 
 run().then(console.log).catch(console.error);

@@ -7,7 +7,7 @@ export class Controller {
     this.connection = connection;
   }
 
-  public readonly query = async (sql: string, params: any[]) => {
+  public readonly query = async (sql: string, params: any[] = []) => {
     return this.connection.query(sql, params);
   }
 };
