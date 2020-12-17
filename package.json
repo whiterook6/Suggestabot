@@ -1,0 +1,12 @@
+{
+  "name": "tvtropes",
+  "version": "1.0.0",
+  "description": "Scrape TV Tropes data and recommend similar media based on content",
+  "main": "index.js",
+  "author": "whiterook6 <whiterook6@gmail.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "typescript": "^4.1.3"
+  }
+}

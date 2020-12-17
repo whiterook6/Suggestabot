@@ -1,0 +1,13 @@
+version: "3.5"
+services:
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - 3306:3306
+  adminer:
+    image: adminer
+    ports:
+      - 8081:8080
