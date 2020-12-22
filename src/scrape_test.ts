@@ -1,34 +1,88 @@
-import fetch from "node-fetch";
-import cheerio from "cheerio";
-import { Connection, OkPacket } from "mysql2/promise";
-import Database from "./Database";
+import { Connection } from "mysql2/promise";
+import { Database } from "./Database";
+import { Controller } from "./Controller";
+import { Scraper } from "./Scraper";
 
-const getTitle = ($: cheerio.Root) => {
-  const headerRow = $("tr").filter((_, element) => {
-    return $(element).text().includes("label");
-  });
-  return headerRow.find("td > a").first().text().trim();
+interface Result {
+  count: number;
+  sampleNames: string[]
 }
 
-const getMediaWithFeature = ($: cheerio.Root): string[] => {
-  const rows = $("tr").filter((_, element) => {
-    return $(element).text().includes("hasFeature");
-  });
-  return rows.map((_, element) => {
-    return $(element).find("td > a").first().text().trim();
-  }).get();
+const scrapeMediaFromTropes = async (connection: Connection): Promise<Result> => {
+  const scraper = new Scraper();
+  const controller = new Controller(connection);
+  const unscrapedTropes = await controller.select("SELECT * FROM `tropes` WHERE `scrape_date` IS NULL LIMIT 10");
+
+  const now = new Date();
+  let count: number = 0;
+  const sampleNames: string[] = [];
+  for (const trope of unscrapedTropes) {
+    const mediaFromTrope = await scraper.getMedia(trope.scrape_url);
+    await controller.query("UPDATE `tropes` SET `scrape_date` = ? WHERE `id` = ?", [now, trope.id]);
+    if (mediaFromTrope.length === 0){
+      continue;
+    }
+
+    const existingMedia = await controller.select("SELECT `name`, `scrape_url` FROM `media`");
+    const existingMediaURLs = existingMedia.map(media => media.scrape_url.toLowerCase());
+    const newMediaFromTrope = mediaFromTrope.filter(media => !existingMediaURLs.includes(media.scrape_url.toLowerCase()));
+    if (newMediaFromTrope.length === 0){
+      continue;
+    }
+
+    const toInsert = newMediaFromTrope.map(media => [media.name, media.scrape_url]);
+    const {affectedRows} = await controller.insert("INSERT IGNORE INTO `media` (`name`, `scrape_url`) VALUES ?", toInsert);
+    
+    const newMediaNames = mediaFromTrope.map(media => media.name);
+    sampleNames.push(newMediaNames[Math.floor(Math.random() * newMediaNames.length)]);
+    await controller.query("INSERT IGNORE INTO `media_tropes` (trope_id, media_id) SELECT ? as `trope_id`, `id` as `media_id` FROM `media` WHERE `name` IN (?)", [trope.id, newMediaNames])
+    
+    count += affectedRows;
+  }
+  
+  return {
+    count,
+    sampleNames
+  } as Result;
 }
 
-const load = async (url: string): Promise<cheerio.Root> => {
-  const response = await fetch(url);
-  const content = await response.text();
-  return cheerio.load(content);
-}
+const scrapeTropesFromMedia = async (connection: Connection) => {
+  const scraper = new Scraper();
+  const controller = new Controller(connection);
+  const unscrapedMedia = await controller.select("SELECT * FROM `media` WHERE `scrape_date` IS NULL LIMIT 10");
+  
+  const now = new Date();
+  let count: number = 0;
+  const sampleNames: string[] = [];
+  for (const media of unscrapedMedia) {
+    const tropesFromMedia = await scraper.getTropes(media.scrape_url);
+    await controller.query("UPDATE `media` SET `scrape_date` = ? WHERE `id` = ?", [now, media.id]);
+    if (tropesFromMedia.length === 0){
+      continue;
+    }
 
-const insertMedia = async (media: string[], connection: Connection) => {
-  const sql = "INSERT INTO `media` (`name`) VALUES ?";
-  const [results] = await connection.query(sql, [media.map(m => [m])]);
-  return results;
+    const existingTropes = await controller.select("SELECT `name`, `scrape_url` FROM `tropes`");
+    const existingTropeURLs = existingTropes.map(media => media.scrape_url.toLowerCase());
+    const newTropesFromMedia = tropesFromMedia.filter(media => !existingTropeURLs.includes(media.scrape_url.toLowerCase()));
+    if (newTropesFromMedia.length === 0){
+      continue;
+    }
+    
+    const toInsert = newTropesFromMedia.map(trope => [trope.name, trope.scrape_url]);
+    const {affectedRows} = await controller.insert("INSERT IGNORE INTO `tropes` (`name`, `scrape_url`) VALUES ?", toInsert);
+    
+    const newTropeNames = tropesFromMedia.map(trope => trope.name);
+    sampleNames.push(newTropeNames[Math.floor(Math.random() * newTropeNames.length)]);
+    await controller.query("INSERT IGNORE INTO `media_tropes` (media_id, trope_id) SELECT ? as `media_id`, `id` as `trope_id` FROM `tropes` WHERE `name` IN (?)", [media.id, newTropeNames])
+    
+    count += affectedRows;
+  }
+  
+  
+  return {
+    count,
+    sampleNames
+  } as Result;
 }
 
 const run = async () => {
@@ -40,13 +94,33 @@ const run = async () => {
     password: "example"
   });
 
-  const $ = await load("http://dbtropes.org/resource/Main/ActionGenre");
-  const media = getMediaWithFeature($);
-  console.log(media);
-  const results = await insertMedia(media, connection);
-  await Database.closePool();
-  const {affectedRows} = results as OkPacket;
-  return affectedRows;
+  let mediaResults;
+  let tropesResults;
+  const runningResults: Result = {
+    count: 0,
+    sampleNames: []
+  };
+
+  try {
+    for (let i = 0; i < 10; i ++){
+      console.log(`Running iteration ${i}`)
+      tropesResults = await scrapeTropesFromMedia(connection);
+      mediaResults = await scrapeMediaFromTropes(connection);
+
+      runningResults.count += tropesResults.count + mediaResults.count;
+      runningResults.sampleNames = [
+        ...runningResults.sampleNames,
+        ...tropesResults.sampleNames,
+        ...mediaResults.sampleNames
+      ];
+    }
+  } finally {
+    try {
+      Database.closePool();
+    } catch (error){}
+  }
+
+  return runningResults;
 }
 
 run().then(console.log).catch(console.error);

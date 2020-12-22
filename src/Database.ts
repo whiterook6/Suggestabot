@@ -1,6 +1,6 @@
 import mysql, {Connection, Pool} from "mysql2/promise";
 
-class Database {
+export class Database {
   public static getPool = (connectionOptions: Partial<mysql.PoolOptions> = {}) => {
     if (!Database.pool) {
       const options: Partial<mysql.PoolOptions> = {};
@@ -35,5 +35,3 @@ class Database {
   };
   private static pool?: Pool = undefined;
 }
-
-export default Database;

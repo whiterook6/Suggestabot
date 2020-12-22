@@ -11,13 +11,16 @@ USE `tvtropes`;
 
 CREATE TABLE `media` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(128) COLLATE utf8mb4_general_ci NOT NULL,
-  `date` datetime DEFAULT NULL,
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `type_id` int unsigned DEFAULT NULL,
+  `date` datetime DEFAULT NULL,
+  `scrape_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `scrape_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `type_id` (`type_id`),
   KEY `name` (`name`),
   KEY `date` (`date`),
+  KEY `scrape_date` (`scrape_date`),
   CONSTRAINT `media_ibfk_1` FOREIGN KEY (`type_id`) REFERENCES `types` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -26,6 +29,7 @@ CREATE TABLE `media_similarities` (
   `from_media_id` int unsigned NOT NULL,
   `to_media_id` int unsigned NOT NULL,
   `similarity` float NOT NULL,
+  UNIQUE KEY `from_media_id_to_media_id` (`from_media_id`,`to_media_id`),
   KEY `from_media_id` (`from_media_id`),
   KEY `to_media_id` (`to_media_id`),
   KEY `similarity` (`similarity`),
@@ -47,8 +51,8 @@ CREATE TABLE `media_tropes` (
 CREATE TABLE `media_urls` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `media_id` int unsigned NOT NULL,
-  `title` varchar(128) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `url` text COLLATE utf8mb4_general_ci NOT NULL,
+  `title` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id`),
   KEY `media_id` (`media_id`),
   KEY `title` (`title`),
@@ -58,21 +62,21 @@ CREATE TABLE `media_urls` (
 
 CREATE TABLE `tropes` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(128) COLLATE utf8mb4_general_ci NOT NULL,
-  `url` text COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `scrape_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `scrape_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `name` (`name`)
+  KEY `name` (`name`),
+  KEY `scrape_date` (`scrape_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 CREATE TABLE `types` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(128) COLLATE utf8mb4_general_ci NOT NULL,
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id`),
   KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
 SET foreign_key_checks = 1;
-
--- 2020-12-17 19:48:53
+-- 2020-12-19 02:54:30
