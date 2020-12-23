@@ -4,6 +4,11 @@ import fetch from "node-fetch";
 export const load = async (url: string): Promise<cheerio.Root> => {
   const response = await fetch(url);
   const content = await response.text();
+
+  if (!response.ok){
+    throw new Error(content);
+  }
+
   return cheerio.load(content);
 }
 
@@ -14,7 +19,6 @@ export interface Media {
 
 export class Scraper {
   public getMedia = async (url: string): Promise<Array<{name: string, scrape_url: string}>> => {
-    console.log(`Scraping ${url}`);
     const $ = await load(url);
 
     const rows = $("tr").filter((_, element) => {
@@ -30,7 +34,6 @@ export class Scraper {
   }
 
   public getTropes = async (url: string): Promise<Array<{name: string, scrape_url: string}>> => {
-    console.log(`Scraping ${url}`);
     const $ = await load(url);
 
     const rows = $("tr").filter((_, el) => {

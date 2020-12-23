@@ -94,8 +94,6 @@ const run = async () => {
     password: "example"
   });
 
-  let mediaResults;
-  let tropesResults;
   const runningResults: Result = {
     count: 0,
     sampleNames: []
@@ -103,11 +101,15 @@ const run = async () => {
 
   try {
     for (let i = 0; i < 10; i ++){
-      console.log(`Running iteration ${i}`)
-      tropesResults = await scrapeTropesFromMedia(connection);
-      mediaResults = await scrapeMediaFromTropes(connection);
+      const tropesResults = await scrapeTropesFromMedia(connection);
+      const mediaResults = await scrapeMediaFromTropes(connection);
 
-      runningResults.count += tropesResults.count + mediaResults.count;
+      const newResultCount = tropesResults.count + mediaResults.count;
+      if (newResultCount === 0){
+        break
+      }
+
+      runningResults.count += newResultCount;
       runningResults.sampleNames = [
         ...runningResults.sampleNames,
         ...tropesResults.sampleNames,
