@@ -62,8 +62,8 @@ const scrapeTropesFromMedia = async (connection: Connection) => {
     }
 
     const existingTropes = await controller.select("SELECT `name`, `scrape_url` FROM `tropes`");
-    const existingTropeURLs = existingTropes.map(media => media.scrape_url.toLowerCase());
-    const newTropesFromMedia = tropesFromMedia.filter(media => !existingTropeURLs.includes(media.scrape_url.toLowerCase()));
+    const existingTropeURLs = existingTropes.map(trope => trope.scrape_url.toLowerCase());
+    const newTropesFromMedia = tropesFromMedia.filter(trope => !existingTropeURLs.includes(trope.scrape_url.toLowerCase()));
     if (newTropesFromMedia.length === 0){
       continue;
     }
@@ -98,9 +98,11 @@ const run = async () => {
     count: 0,
     sampleNames: []
   };
-
+  let iteration = 1;
   try {
-    for (let i = 0; i < 10; i ++){
+    while (runningResults.count < 20000){
+      console.log(`Iteration ${iteration}`);
+      iteration++;
       const tropesResults = await scrapeTropesFromMedia(connection);
       const mediaResults = await scrapeMediaFromTropes(connection);
 
@@ -115,6 +117,7 @@ const run = async () => {
         ...tropesResults.sampleNames,
         ...mediaResults.sampleNames
       ];
+      console.log(`Running total of added pages: ${runningResults.count}`);
     }
   } finally {
     try {
