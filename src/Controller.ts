@@ -16,6 +16,11 @@ export class Controller {
     return results as RowDataPacket[];
   }
 
+  public readonly selectOne = async (sql: string, params: any[] = []): Promise<RowDataPacket> => {
+    const rows: RowDataPacket[] = await this.select(sql, params);
+    return rows[0];
+  }
+
   public readonly insert = async (sql: string, params: any[][] = []): Promise<OkPacket> => {
     const result = await this.connection.query(sql, [params]);
     return (result as OkPacket[])[0];

@@ -43,6 +43,7 @@ CREATE TABLE `media_tropes` (
   `trope_id` int unsigned NOT NULL,
   KEY `media_id` (`media_id`),
   KEY `trope_id` (`trope_id`),
+	UNIQUE KEY `media_id_trope_id` (`media_id`, `trope_id`),
   CONSTRAINT `media_tropes_ibfk_1` FOREIGN KEY (`media_id`) REFERENCES `media` (`id`) ON DELETE CASCADE,
   CONSTRAINT `media_tropes_ibfk_2` FOREIGN KEY (`trope_id`) REFERENCES `tropes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
