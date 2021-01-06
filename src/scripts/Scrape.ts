@@ -1,7 +1,7 @@
 import { Connection } from "mysql2/promise";
-import { Database } from "./Database";
-import { Controller } from "./Controller";
-import { Scraper } from "./Scraper";
+import { Database } from "../Database";
+import { Controller } from "../controllers/Controller";
+import { Scraper } from "../Scraper";
 
 interface Result {
   count: number;

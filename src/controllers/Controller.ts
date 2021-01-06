@@ -16,9 +16,13 @@ export class Controller {
     return results as RowDataPacket[];
   }
 
-  public readonly selectOne = async (sql: string, params: any[] = []): Promise<RowDataPacket> => {
+  public readonly selectOne = async (sql: string, params: any[] = []): Promise<RowDataPacket | null> => {
     const rows: RowDataPacket[] = await this.select(sql, params);
-    return rows[0];
+    if (rows.length === 0){
+      return null;
+    } else {
+      return rows[0];
+    }
   }
 
   public readonly insert = async (sql: string, params: any[][] = []): Promise<OkPacket> => {

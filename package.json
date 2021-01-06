@@ -21,8 +21,8 @@
   "scripts": {
     "clean": "rimraf compiled/*",
     "build": "tsc",
-    "scrape": "node compiled/scrape_test.js",
-    "truncate": "node compiled/Truncate.js",
-    "seed": "node compiled/Seed.js"
+    "scrape": "node compiled/scripts/Scrape.js",
+    "truncate": "node compiled/scripts/Truncate.js",
+    "seed": "node compiled/scripts/Seed.js"
   }
 }

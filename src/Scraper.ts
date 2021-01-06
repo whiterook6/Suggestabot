@@ -1,6 +1,6 @@
 import cheerio from "cheerio";
 import fetch from "node-fetch";
-import { cleanURL, getTropeNameFromURL } from "./URLs";
+import { cleanURL } from "./URLs";
 
 export const load = async (url: string): Promise<cheerio.Root> => {
   const response = await fetch(url);
@@ -76,6 +76,7 @@ export class Scraper {
         return true;
       }
     });
+
     return rows.map((_, element) => {
       const a = $(element).find("td > a").last();
       const href = a.attr("href")!;
